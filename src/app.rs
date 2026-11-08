@@ -385,6 +385,11 @@ impl Viewer {
         a
     }
 
+    fn toggle_fullscreen(&mut self, ctx: &egui::Context) {
+        self.fullscreen = !self.fullscreen;
+        ctx.send_viewport_cmd(ViewportCommand::Fullscreen(self.fullscreen));
+    }
+
     fn handle_keys(&mut self, ctx: &egui::Context, area: Rect, ppp: f32) {
         let (keys, mods) = ctx.input(|i| {
             let keys: Vec<Key> = [
@@ -424,10 +429,7 @@ impl Viewer {
                 Key::Num0 => self.reset_fit(),
                 Key::Num1 => self.set_actual_size(area.center(), area, ppp),
                 Key::I => self.info_open = !self.info_open,
-                Key::F | Key::F11 => {
-                    self.fullscreen = !self.fullscreen;
-                    ctx.send_viewport_cmd(ViewportCommand::Fullscreen(self.fullscreen));
-                }
+                Key::F | Key::F11 => self.toggle_fullscreen(ctx),
                 Key::Escape => {
                     if self.fullscreen {
                         self.fullscreen = false;
@@ -1053,11 +1055,11 @@ impl Viewer {
         // Right cluster, laid out from the right edge inwards.
         let info_r = Rect::from_center_size(pos2(x - 18.0, cy), vec2(36.0, 36.0));
         x -= 36.0 + 4.0;
-        let fit_r = Rect::from_center_size(pos2(x - 18.0, cy), vec2(36.0, 36.0));
+        let full_r = Rect::from_center_size(pos2(x - 18.0, cy), vec2(36.0, 36.0));
         x -= 36.0 + 8.0;
         let pill = Rect::from_min_max(pos2(x - 116.0, cy - 16.0), pos2(x, cy + 16.0));
         x -= 116.0 + 12.0;
-        hot.extend([info_r, fit_r, pill]);
+        hot.extend([info_r, full_r, pill]);
 
         let has_image = self.current().is_some();
         if icon_button(
@@ -1080,23 +1082,34 @@ impl Viewer {
         {
             self.info_open = !self.info_open;
         }
-        if icon_button(ui, &p, fit_r, "fit-btn", false, 1.0, |p, c, col| {
-            let s = Stroke::new(1.6, col);
-            for (sx, sy) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
-                let corner = c + vec2(7.0 * sx, 7.0 * sy);
-                p.add(Shape::line(
-                    vec![
-                        corner - vec2(0.0, 4.0 * sy),
-                        corner,
-                        corner - vec2(4.0 * sx, 0.0),
-                    ],
-                    s,
-                ));
-            }
-        })
+        let fullscreen = self.fullscreen;
+        if icon_button(
+            ui,
+            &p,
+            full_r,
+            "fullscreen-btn",
+            fullscreen,
+            1.0,
+            |p, c, col| {
+                let s = Stroke::new(1.6, col);
+                // Corners point outwards to enter and inwards to leave.
+                let (reach, arm) = if fullscreen { (3.0, -4.0) } else { (7.0, 4.0) };
+                for (sx, sy) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
+                    let corner = c + vec2(reach * sx, reach * sy);
+                    p.add(Shape::line(
+                        vec![
+                            corner - vec2(0.0, arm * sy),
+                            corner,
+                            corner - vec2(arm * sx, 0.0),
+                        ],
+                        s,
+                    ));
+                }
+            },
+        )
         .clicked()
         {
-            self.reset_fit();
+            self.toggle_fullscreen(ui.ctx());
         }
 
         p.rect_filled(pill, 8.0, PILL);

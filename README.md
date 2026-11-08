@@ -37,7 +37,7 @@ Run `afterimage.exe <image file>`, drop an image onto the window, or press Ctrl+
 | Drag | Pan when zoomed in; swipe to the next image when fitted |
 | I | Info panel |
 | P | Pause / play animation |
-| F / F11 | Fullscreen |
+| F / F11, or the button next to ⓘ | Fullscreen |
 | Ctrl+O | Open a file |
 | Esc | Leave fullscreen → close panel → quit |
 
