@@ -99,10 +99,11 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 
 ## 배포와 자동 업데이트
 
-- 배포는 세 단계다.
+- 배포는 네 단계다.
   1. `Cargo.toml`의 `version`을 올리고 커밋한 뒤 `v<version>` 태그를 푸시한다. 태그와 버전이 다르면 워크플로가 실패한다.
   2. `.github/workflows/release.yml`이 빌드해서 초안 Release에 `afterimage.exe`를 올린다. 공개하지는 않는다.
-  3. 워크플로가 끝나면 이 PC에서 `scripts\publish.ps1 <version>`을 실행한다. exe를 받아 서명한 `latest.txt`를 올리고 Release를 공개한다.
+  3. 워크플로가 끝나면 초안 Release에 영어로 릴리스 노트를 쓴다(`gh release edit v<version> --notes-file <파일>`). 자동 생성 노트는 PR만 모으므로 이 저장소에서는 비교 링크 한 줄만 나온다.
+  4. 이 PC에서 `scripts\publish.ps1 <version>`을 실행한다. 노트가 비어 있으면 멈추고, 있으면 exe를 받아 서명한 `latest.txt`를 올리고 Release를 공개한다.
 - 서명 키는 `%USERPROFILE%\.afterimage\release-signing.key`에만 있다. 커밋하거나 GitHub에 올리지 않는다. 잃어버리면 설치된 앱에 업데이트를 보낼 수 없으니 백업해 둔다. 공개 키는 `update.rs`의 `PUBLIC_KEY`이고, 바꾸면 설치된 앱이 업데이트를 못 받는다.
 - `latest.txt`는 `<version> <sha256> <서명>` 한 줄이다. 서명이 없거나 틀리면 앱은 업데이트하지 않는다. 0.3.0 이하는 앞의 두 칸만 읽으니, 세 번째 칸을 추가해도 이 버전들은 그대로 업데이트된다.
 - 저장소: https://github.com/Hoyeom/afterimage (공개). `*.exe`는 커밋하지 않는다.

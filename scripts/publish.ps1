@@ -11,6 +11,15 @@ $dir = Join-Path ([IO.Path]::GetTempPath()) "afterimage-publish-$PID"
 New-Item -ItemType Directory -Path $dir | Out-Null
 
 try {
+    # --generate-notes only lists merged PRs, and this repo commits to main, so
+    # the draft starts as a bare compare link until someone writes the notes.
+    $notes = gh release view $tag --repo $repo --json body --jq .body
+    if ($LASTEXITCODE -ne 0) { throw "Couldn't read the notes of $tag" }
+    $written = ($notes | Where-Object { "$_".Trim() -and $_ -notmatch '^\*\*Full Changelog\*\*' })
+    if (-not $written) {
+        throw "$tag has no release notes. Write them first: gh release edit $tag --repo $repo --notes-file <file>"
+    }
+
     gh release download $tag --repo $repo --pattern afterimage.exe --dir $dir
     if ($LASTEXITCODE -ne 0) { throw "Couldn't download afterimage.exe from $tag" }
 
