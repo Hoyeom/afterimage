@@ -53,9 +53,9 @@ RAW isn't supported yet.
 
 ## Automatic updates
 
-Each time it starts, Afterimage checks GitHub Releases for a newer version in the background. If there is one, it downloads it, verifies its SHA-256 checksum and replaces the exe. The new version applies the next time you open the app.
+Each time it starts, Afterimage checks GitHub Releases for a newer version in the background. If there is one, it verifies the release signature, downloads the new exe, checks its SHA-256 hash against the signed value and replaces the exe. The new version applies the next time you open the app.
 
-This connects to github.com and sends no images or personal information. The checksum catches corrupted downloads, but because the exe isn't signed, it can't protect against a compromised GitHub account.
+This connects to github.com and sends no images or personal information. Updates are signed with a key kept off GitHub, so a compromised GitHub account alone can't push one. The exe itself has no code-signing certificate.
 
 To turn updates off, set the environment variable `AFTERIMAGE_NO_UPDATE=1`. In folders the app can't write to, such as `Program Files`, it only tells you that a new version is available.
 

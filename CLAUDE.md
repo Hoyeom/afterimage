@@ -26,6 +26,8 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 | `src/i18n.rs` | 언어 감지와 UI 문구 표 |
 | `src/update.rs` | GitHub Releases에서 자동 업데이트, `cfg(windows)` 전용 |
 | `src/explorer.rs` | 열려 있는 탐색기 창의 보기 순서 읽기, 탐색기식 이름 비교(`StrCmpLogicalW`), `cfg(windows)` 전용 |
+| `examples/sign.rs` | 배포 서명 도구 (키 만들기, `latest.txt` 만들기). 앱에는 들어가지 않는다 |
+| `scripts/publish.ps1` | 초안 Release를 서명해서 공개 |
 | `build.rs` | exe에 아이콘·버전 정보 넣기 (winresource) |
 | `assets/` | `icon.svg`가 원본. png·ico는 여기서 다시 만든다 |
 
@@ -97,13 +99,18 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 
 ## 배포와 자동 업데이트
 
-- 배포: `Cargo.toml`의 `version`을 올리고 커밋한 뒤 `v<version>` 태그를 푸시한다. `.github/workflows/release.yml`이 빌드해서 Release에 `afterimage.exe`와 `latest.txt`(`<version> <sha256>`)를 올린다. 태그와 버전이 다르면 실패한다.
+- 배포는 세 단계다.
+  1. `Cargo.toml`의 `version`을 올리고 커밋한 뒤 `v<version>` 태그를 푸시한다. 태그와 버전이 다르면 워크플로가 실패한다.
+  2. `.github/workflows/release.yml`이 빌드해서 초안 Release에 `afterimage.exe`를 올린다. 공개하지는 않는다.
+  3. 워크플로가 끝나면 이 PC에서 `scripts\publish.ps1 <version>`을 실행한다. exe를 받아 서명한 `latest.txt`를 올리고 Release를 공개한다.
+- 서명 키는 `%USERPROFILE%\.afterimage\release-signing.key`에만 있다. 커밋하거나 GitHub에 올리지 않는다. 잃어버리면 설치된 앱에 업데이트를 보낼 수 없으니 백업해 둔다. 공개 키는 `update.rs`의 `PUBLIC_KEY`이고, 바꾸면 설치된 앱이 업데이트를 못 받는다.
+- `latest.txt`는 `<version> <sha256> <서명>` 한 줄이다. 서명이 없거나 틀리면 앱은 업데이트하지 않는다. 0.3.0 이하는 앞의 두 칸만 읽으니, 세 번째 칸을 추가해도 이 버전들은 그대로 업데이트된다.
 - 저장소: https://github.com/Hoyeom/afterimage (공개). `*.exe`는 커밋하지 않는다.
-- `update.rs`는 실행마다 한 번, 3초 뒤 백그라운드에서 `latest.txt`를 읽는다. 실패는 조용히 넘어간다. 시작 속도에 영향을 주면 안 된다.
+- `update.rs`는 실행마다 한 번, 3초 뒤 백그라운드에서 `latest.txt`를 읽는다. GitHub의 `releases/latest/download`가 가끔 504를 돌려주므로 20초 간격으로 세 번까지 시도하고, 그래도 실패하면 조용히 넘어간다. 시작 속도에 영향을 주면 안 된다.
 - 교체는 실행 중인 exe를 `.exe.old`로 옮기고 새 exe를 그 자리에 두는 방식이다. 다음 실행 때 적용되고 `.exe.old`도 그때 지운다.
 - 경로에 `target` 폴더가 있으면(개발 빌드) 건너뛴다. `AFTERIMAGE_NO_UPDATE`로 끌 수 있다.
 - `latest.txt`와 exe의 파일 이름·형식을 바꾸면 이미 배포된 버전이 업데이트를 못 받는다.
-- 코드 서명은 없다. 체크섬은 손상만 막고, GitHub 계정이 뚫리면 막지 못한다.
+- exe 자체의 코드 서명은 없다(SmartScreen 경고가 뜰 수 있다). 업데이트 서명은 GitHub 계정이 뚫려도 위조를 막지만, 서명하는 PC가 뚫리거나 빌드가 변조된 채 서명하면 막지 못한다.
 
 ## 아직 확인 못 한 것 / 할 일
 

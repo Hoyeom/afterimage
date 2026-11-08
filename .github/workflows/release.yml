@@ -8,39 +8,28 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  # Builds from a clean state and leaves a draft. Publishing needs the signing
+  # key, which isn't on GitHub: run scripts\publish.ps1 afterwards.
+  draft:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: release-${{ hashFiles('Cargo.lock') }}
+      # v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Tag must match Cargo.toml
         shell: bash
         run: |
           version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
           test "v$version" = "$GITHUB_REF_NAME"
-          echo "VERSION=$version" >> "$GITHUB_ENV"
 
       - run: cargo test --release --locked
 
       - run: cargo build --release --locked
 
-      # Installed apps read latest.txt, so the exe has to be up first: the
-      # release is created as a draft and published last.
-      - name: Publish
+      - name: Create draft release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          sha=$(sha256sum target/release/afterimage.exe | cut -d' ' -f1)
-          echo "$VERSION $sha" > latest.txt
-          gh release create "$GITHUB_REF_NAME" --draft --generate-notes \
-            target/release/afterimage.exe latest.txt
-          gh release edit "$GITHUB_REF_NAME" --draft=false --latest
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes \
+            target/release/afterimage.exe
