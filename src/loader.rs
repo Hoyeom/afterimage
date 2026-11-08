@@ -344,7 +344,7 @@ fn load_still(path: &Path, bytes: &[u8]) -> Result<(DynamicImage, &'static str),
         match open_oriented(bytes) {
             Ok(x) => Ok(x),
             Err(e) => crate::wic::decode(path)
-                .map(|i| (DynamicImage::ImageRgba8(i), "기타"))
+                .map(|i| (DynamicImage::ImageRgba8(i), crate::i18n::s().other_format))
                 .map_err(|_| e),
         }
     }
@@ -507,7 +507,7 @@ fn format_name(f: Option<ImageFormat>) -> &'static str {
         Some(ImageFormat::Bmp) => "BMP",
         Some(ImageFormat::Tiff) => "TIFF",
         Some(ImageFormat::Ico) => "ICO",
-        _ => "기타",
+        _ => crate::i18n::s().other_format,
     }
 }
 

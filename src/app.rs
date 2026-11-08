@@ -7,6 +7,7 @@ use eframe::egui::{
     TextureOptions, Ui, Vec2, ViewportCommand,
 };
 
+use crate::i18n::s;
 use crate::loader::{self, Done, Loader, Meta};
 use crate::spring::{self, Anim};
 use crate::theme::*;
@@ -307,7 +308,7 @@ impl Viewer {
 
     fn open_dialog(&mut self) {
         if let Some(p) = rfd::FileDialog::new()
-            .add_filter("이미지", loader::EXTENSIONS)
+            .add_filter(s().images, loader::EXTENSIONS)
             .pick_file()
         {
             self.open_path(&p);
@@ -467,7 +468,7 @@ impl Viewer {
                     painter.text(
                         view.center() - vec2(0.0, 12.0),
                         Align2::CENTER_CENTER,
-                        "이 파일은 열 수 없어요",
+                        s().cannot_open,
                         strong(15.0),
                         TEXT,
                     );
@@ -482,7 +483,7 @@ impl Viewer {
                     painter.text(
                         view.center(),
                         Align2::CENTER_CENTER,
-                        "불러오는 중…",
+                        s().loading,
                         body(13.0),
                         TEXT_2,
                     );
@@ -632,14 +633,14 @@ impl Viewer {
         p.text(
             c + vec2(0.0, 4.0),
             Align2::CENTER_CENTER,
-            "이미지를 이 창으로 끌어다 놓으세요",
+            s().drop_hint,
             strong(16.0),
             TEXT,
         );
         p.text(
             c + vec2(0.0, 30.0),
             Align2::CENTER_CENTER,
-            "또는",
+            s().or,
             body(13.0),
             TEXT_2,
         );
@@ -657,7 +658,7 @@ impl Viewer {
         p.text(
             btn.center(),
             Align2::CENTER_CENTER,
-            "파일 열기  Ctrl+O",
+            s().open_file,
             strong(13.0),
             BG,
         );
@@ -868,7 +869,7 @@ impl Viewer {
         p.text(
             pos2(inner.left(), y + 16.0),
             Align2::LEFT_CENTER,
-            "정보",
+            s().info,
             strong(14.0),
             TEXT.gamma_multiply(alpha),
         );
@@ -891,7 +892,7 @@ impl Viewer {
             p.text(
                 pos2(inner.left(), y),
                 Align2::LEFT_TOP,
-                "불러오는 중…",
+                s().loading,
                 body(12.0),
                 TEXT_2.gamma_multiply(alpha),
             );
@@ -902,7 +903,7 @@ impl Viewer {
         p.text(
             pos2(inner.left(), y),
             Align2::LEFT_TOP,
-            "히스토그램",
+            s().histogram,
             body(11.0),
             TEXT_2.gamma_multiply(alpha),
         );
@@ -929,43 +930,35 @@ impl Viewer {
             .map(|s| s.to_string_lossy().to_string())
             .unwrap_or_default();
         let mut rows: Vec<(&str, String)> = vec![
-            ("파일 이름", name),
-            ("해상도", format!("{} × {}", m.width, m.height)),
-            ("파일 크기", human_size(m.file_size)),
-            ("형식", m.format.to_string()),
+            (s().file_name, name),
+            (s().resolution, format!("{} × {}", m.width, m.height)),
+            (s().file_size, human_size(m.file_size)),
+            (s().format, m.format.to_string()),
         ];
         if let Some(c) = &m.camera {
-            rows.push(("카메라", c.clone()));
+            rows.push((s().camera, c.clone()));
         }
         if let Some(l) = &m.lens {
-            rows.push(("렌즈", l.clone()));
+            rows.push((s().lens, l.clone()));
         }
         if let Some(e) = &m.exposure {
-            rows.push(("노출", e.clone()));
+            rows.push((s().exposure, e.clone()));
         }
         if let Some(t) = &m.taken {
-            rows.push(("촬영일", t.clone()));
+            rows.push((s().taken, t.clone()));
         }
         if let Some(t) = m.modified {
             let dt: chrono::DateTime<chrono::Local> = t.into();
-            rows.push(("수정한 날짜", dt.format("%Y-%m-%d %H:%M").to_string()));
+            rows.push((s().modified, dt.format("%Y-%m-%d %H:%M").to_string()));
         }
         if loaded.frames.len() > 1 {
-            let state = if self.anim_paused {
-                " · 일시정지 (P)"
-            } else {
-                ""
-            };
+            let state = if self.anim_paused { s().paused } else { "" };
             rows.push((
-                "애니메이션",
-                format!(
-                    "{}프레임 · {:.1}초{state}",
-                    loaded.frames.len(),
-                    m.duration_ms as f32 / 1000.0
-                ),
+                s().animation,
+                s().frames(loaded.frames.len(), m.duration_ms as f32 / 1000.0) + state,
             ));
         }
-        rows.push(("디코딩", format!("{} ms", m.decode_ms)));
+        rows.push((s().decoding, format!("{} ms", m.decode_ms)));
 
         let label_w = 80.0;
         let value_w = inner.width() - label_w;
@@ -1013,7 +1006,7 @@ impl Viewer {
         p.text(
             b1.center(),
             Align2::CENTER_CENTER,
-            "탐색기에서 열기",
+            s().reveal,
             body(12.5),
             TEXT.gamma_multiply(alpha),
         );
@@ -1026,7 +1019,7 @@ impl Viewer {
         p.text(
             b2.center(),
             Align2::CENTER_CENTER,
-            "경로 복사",
+            s().copy_path,
             strong(12.5),
             BG,
         );
@@ -1141,10 +1134,8 @@ impl Viewer {
         {
             let notice = match crate::update::status() {
                 crate::update::Status::Idle => None,
-                crate::update::Status::Ready => Some("업데이트가 준비됐어요. 다시 열면 적용돼요"),
-                crate::update::Status::NoPermission => {
-                    Some("새 버전이 있어요. 이 폴더에는 자동으로 설치할 수 없어요")
-                }
+                crate::update::Status::Ready => Some(s().update_ready),
+                crate::update::Status::NoPermission => Some(s().update_no_permission),
             };
             if let Some(text) = notice {
                 let r = p.text(

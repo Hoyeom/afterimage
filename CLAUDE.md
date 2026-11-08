@@ -23,6 +23,7 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 | `src/theme.rs` | 색과 글꼴 상수 |
 | `src/wic.rs` | Windows 내장 코덱(WIC)으로 HEIC·AVIF 디코딩, `cfg(windows)` 전용 |
 | `src/chrome.rs` | 상단 바를 창 제목 표시줄로 쓰기(창 서브클래싱, 끌기·크기 조절 판정), `cfg(windows)` 전용 |
+| `src/i18n.rs` | 언어 감지와 UI 문구 표 |
 | `src/update.rs` | GitHub Releases에서 자동 업데이트, `cfg(windows)` 전용 |
 | `src/explorer.rs` | 열려 있는 탐색기 창의 보기 순서 읽기, 탐색기식 이름 비교(`StrCmpLogicalW`), `cfg(windows)` 전용 |
 | `build.rs` | exe에 아이콘·버전 정보 넣기 (winresource) |
@@ -74,7 +75,7 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
   - 포인트 `#7AA2FF`
 - 그라데이션은 쓰지 않는다. 아이콘도 마찬가지다.
 - 앱 아이콘은 B안(뷰파인더 모서리 + 산 + 노란 해)을 단색으로 그린 것이다.
-- UI 문구는 한국어 해요체로 쓴다.
+- UI 문구는 `src/i18n.rs` 표에만 쓴다. 한국어는 해요체로 쓴다. Windows 표시 언어가 한국어면 한국어, 그 밖에는 영어로 나온다(`AFTERIMAGE_LANG=en|ko`로 바꿀 수 있다). 언어를 추가할 때는 `main.rs`의 글꼴이 그 글자를 담는지 확인한다.
 - 글꼴은 실행할 때 `C:\Windows\Fonts`에서 Segoe UI와 맑은 고딕을 읽어 온다 (번들하지 않음). `theme::strong()`은 Semibold/Bold 패밀리다.
 
 ## 형식 지원

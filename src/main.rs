@@ -5,6 +5,7 @@ mod app;
 mod chrome;
 #[cfg(windows)]
 mod explorer;
+mod i18n;
 mod loader;
 mod spring;
 mod theme;

@@ -29,7 +29,7 @@ pub fn decode(path: &Path) -> Result<RgbaImage, String> {
     FACTORY.with(|factory| {
         let factory = factory
             .as_ref()
-            .ok_or_else(|| "Windows 이미지 구성 요소를 초기화하지 못했어요".to_string())?;
+            .ok_or_else(|| crate::i18n::s().wic_init_failed.to_string())?;
         let explain = |e: windows::core::Error| explain(e, path);
         unsafe {
             let name = HSTRING::from(path.as_os_str());
@@ -50,8 +50,7 @@ pub fn decode(path: &Path) -> Result<RgbaImage, String> {
             let mut buf = vec![0u8; stride as usize * h as usize];
             rgba.CopyPixels(std::ptr::null(), stride, &mut buf)
                 .map_err(explain)?;
-            RgbaImage::from_raw(w, h, buf)
-                .ok_or_else(|| "이미지 크기가 올바르지 않아요".to_string())
+            RgbaImage::from_raw(w, h, buf).ok_or_else(|| crate::i18n::s().wic_bad_size.to_string())
         }
     })
 }
@@ -59,11 +58,9 @@ pub fn decode(path: &Path) -> Result<RgbaImage, String> {
 fn explain(e: windows::core::Error, path: &Path) -> String {
     if e.code() == WINCODEC_ERR_COMPONENTNOTFOUND {
         return match crate::loader::ext_of(path).as_str() {
-            "heic" | "heif" => {
-                "HEIC를 열려면 Microsoft Store에서 'HEIF 이미지 확장'과 'HEVC 비디오 확장'을 설치해 주세요".into()
-            }
-            "avif" => "AVIF를 열려면 Microsoft Store에서 'AV1 비디오 확장'을 설치해 주세요".into(),
-            _ => "이 형식을 읽을 수 있는 코덱이 Windows에 없어요".into(),
+            "heic" | "heif" => crate::i18n::s().need_heic_codec.into(),
+            "avif" => crate::i18n::s().need_avif_codec.into(),
+            _ => crate::i18n::s().no_codec.into(),
         };
     }
     e.message().to_string()

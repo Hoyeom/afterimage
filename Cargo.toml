@@ -1,6 +1,6 @@
 [package]
 name = "afterimage"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Fast image viewer"
 license = "MIT"
@@ -26,7 +26,7 @@ strip = true
 opt-level = 2
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.62", features = ["Win32_Graphics_Imaging", "Win32_System_Com", "Win32_Foundation", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_System_Variant", "Win32_System_Ole", "Win32_Graphics_Dwm", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_WindowsAndMessaging", "Win32_Networking_WinHttp"] }
+windows = { version = "0.62", features = ["Win32_Graphics_Imaging", "Win32_System_Com", "Win32_Foundation", "Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_System_Variant", "Win32_System_Ole", "Win32_Graphics_Dwm", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_WindowsAndMessaging", "Win32_Networking_WinHttp", "Win32_Globalization"] }
 sha2 = "0.10"
 raw-window-handle = "0.6"
 
