@@ -1423,7 +1423,9 @@ fn until_next_frame(frames: &[(TextureHandle, u32)], t: f64) -> f64 {
 }
 
 fn tex_options() -> TextureOptions {
+    // Above 100% each image pixel stays square, so pixel art doesn't blur.
     TextureOptions {
+        magnification: TextureFilter::Nearest,
         mipmap_mode: Some(TextureFilter::Linear),
         ..TextureOptions::LINEAR
     }

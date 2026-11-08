@@ -45,6 +45,7 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 - `scale`은 화면 point당 이미지 픽셀 수다. 100%는 `1 / pixels_per_point`이다.
 - 맞춤(fit)은 100%를 넘겨 확대하지 않는다.
 - 줌은 커서 아래 지점을 고정한 채로 한다 (`zoom_at`).
+- 100%를 넘겨 확대할 때는 nearest로 그려서 도트 이미지가 흐려지지 않게 한다. 줄일 때는 linear와 mipmap을 쓴다 (`tex_options`).
 
 ### 움직임
 - 지속시간이나 easing을 쓰지 않고 `spring.rs`의 스프링만 쓴다. 아래 값은 디자인에서 확정한 것이라 임의로 바꾸지 않는다.
