@@ -20,6 +20,7 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 | `src/app.rs` | 화면 그리기, 입력, 줌/팬, 넘기기, 필름스트립, 정보 패널, 애니메이션 재생 |
 | `src/loader.rs` | 폴더 탐색, 디코딩 워커, 프레임/썸네일/EXIF/히스토그램 |
 | `src/spring.rs` | 스프링 애니메이션 |
+| `src/sharp.rs`, `src/sharp.wgsl` | 100%를 넘긴 이미지를 그리는 wgpu 셰이더. 처음 확대할 때 파이프라인을 만든다 |
 | `src/theme.rs` | 색과 글꼴 상수 |
 | `src/wic.rs` | Windows 내장 코덱(WIC)으로 HEIC·AVIF 디코딩, `cfg(windows)` 전용 |
 | `src/chrome.rs` | 상단 바를 창 제목 표시줄로 쓰기(창 서브클래싱, 끌기·크기 조절 판정), `cfg(windows)` 전용 |
@@ -45,7 +46,7 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 - `scale`은 화면 point당 이미지 픽셀 수다. 100%는 `1 / pixels_per_point`이다.
 - 맞춤(fit)은 100%를 넘겨 확대하지 않는다.
 - 줌은 커서 아래 지점을 고정한 채로 한다 (`zoom_at`).
-- 100%를 넘겨 확대할 때는 nearest로 그려서 도트 이미지가 흐려지지 않게 한다. 줄일 때는 linear와 mipmap을 쓴다 (`tex_options`).
+- 100%를 넘겨 확대할 때는 `sharp.rs`의 셰이더로 그린다. 픽셀은 네모로 두고 경계가 걸린 화면 픽셀만 섞어서, 어떤 배율에서도 칸 폭이 고르게 보인다. 정수 배율에서는 섞이는 픽셀이 없다. 100% 이하는 egui가 그린다(`tex_options`).
 
 ### 움직임
 - 지속시간이나 easing을 쓰지 않고 `spring.rs`의 스프링만 쓴다. 아래 값은 디자인에서 확정한 것이라 임의로 바꾸지 않는다.
@@ -116,8 +117,8 @@ Windows용 이미지 뷰어. Rust + eframe/egui 0.37 (wgpu 백엔드).
 
 ## 아직 확인 못 한 것 / 할 일
 
-- HEIC·AVIF는 실제 Windows에서 열어 본 적이 없다.
-  - HEIC 회전도 확인이 필요하다. HEIF 자체 회전 정보(irot)와 EXIF 회전값이 다르게 처리될 수 있는데, 현재 WIC 경로는 회전을 따로 적용하지 않는다.
-- RAW 미지원. 파일 안에 들어 있는 JPEG 미리보기를 꺼내 쓰는 방식으로 넣을 예정이다.
+- HEIC는 Windows 인코더로 만든 샘플만 열어 봤다. 회전값 6을 넣은 샘플도 바르게 보인다.
+  - 휴대폰으로 찍은 실제 HEIC는 아직 못 봤다. HEIF 자체 회전 정보(irot)와 EXIF 회전값이 다르게 처리될 수 있는데, 현재 WIC 경로는 회전을 따로 적용하지 않는다.
+- AVIF는 실제로 열어 본 적이 없다. Windows에 AVIF 인코더가 없어 샘플을 따로 구해야 한다.- RAW 미지원. 파일 안에 들어 있는 JPEG 미리보기를 꺼내 쓰는 방식으로 넣을 예정이다.
 - Windows 기본 프로그램 등록(파일 연결)이 아직 없다.
 - 큰 JPEG의 썸네일은 전체를 디코딩한 뒤 줄인다. 느리면 WIC 스케일러나 DCT 단계 축소 디코딩을 검토한다.

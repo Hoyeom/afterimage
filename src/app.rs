@@ -57,6 +57,8 @@ pub struct Viewer {
     fullscreen: bool,
     /// The top bar is the window's title bar (see `chrome.rs`).
     custom_chrome: bool,
+    /// For drawing magnified images with our own shader (see `sharp.rs`).
+    render_state: Option<eframe::egui_wgpu::RenderState>,
 
     panel_rect: Option<Rect>,
     strip_rect: Option<Rect>,
@@ -112,6 +114,7 @@ impl Viewer {
             custom_chrome: crate::chrome::install(cc),
             #[cfg(not(windows))]
             custom_chrome: false,
+            render_state: cc.wgpu_render_state.clone(),
             panel_rect: None,
             strip_rect: None,
             last_title: String::new(),
@@ -614,13 +617,21 @@ impl Viewer {
         let size = img * self.scale.x;
         let center = area.center() + vec2(self.pan_x.x + self.slide.x, self.pan_y.x);
         let rect = Rect::from_center_size(center, size);
-        let tint = Color32::WHITE.gamma_multiply(self.fade.x.clamp(0.0, 1.0));
-        painter.image(
-            tex,
-            rect,
-            Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
-            tint,
-        );
+        let alpha = self.fade.x.clamp(0.0, 1.0);
+        // A thumbnail standing in for the full image stays smooth.
+        let sharp = is_full
+            && self
+                .render_state
+                .as_ref()
+                .is_some_and(|state| crate::sharp::paint(&painter, state, tex, rect, ppp, alpha));
+        if !sharp {
+            painter.image(
+                tex,
+                rect,
+                Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                Color32::WHITE.gamma_multiply(alpha),
+            );
+        }
     }
 
     fn draw_empty(&mut self, ui: &mut Ui, view: Rect) {
@@ -1423,7 +1434,8 @@ fn until_next_frame(frames: &[(TextureHandle, u32)], t: f64) -> f64 {
 }
 
 fn tex_options() -> TextureOptions {
-    // Above 100% each image pixel stays square, so pixel art doesn't blur.
+    // At 100% a fractional position mustn't blur the image. Above 100% `sharp.rs`
+    // takes over, so this only shows for the frame before a texture is uploaded.
     TextureOptions {
         magnification: TextureFilter::Nearest,
         mipmap_mode: Some(TextureFilter::Linear),
