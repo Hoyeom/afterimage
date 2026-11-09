@@ -19,7 +19,6 @@ const THUMB_GAP: f32 = 6.0;
 const STRIP_PAD: f32 = 8.0;
 const STRIP_BOTTOM: f32 = 20.0;
 const PANEL_W: f32 = 300.0;
-const SWIPE_IN: f32 = 72.0;
 
 struct Loaded {
     /// One entry for stills; every frame with its delay (ms) for animations.
@@ -275,12 +274,6 @@ impl Viewer {
     // ------------------------------------------------------------- navigation
 
     fn go(&mut self, to: usize) {
-        let dir = if to > self.idx { 1.0 } else { -1.0 };
-        self.go_from(to, dir);
-    }
-
-    /// `dir` is the side the new image comes from: 1 = next, -1 = previous.
-    fn go_from(&mut self, to: usize, dir: f32) {
         if self.files.is_empty() || to >= self.files.len() || to == self.idx {
             return;
         }
@@ -289,9 +282,9 @@ impl Viewer {
         self.fitted_for = None;
         self.pan_x.snap(0.0);
         self.pan_y.snap(0.0);
-        // The new image slides in from the side it came from, and fades up.
-        self.slide.x = dir * SWIPE_IN;
-        self.slide.to = 0.0;
+        // The new image fades up in place, so two images can be compared by
+        // flipping between them.
+        self.slide.snap(0.0);
         self.fade.x = self.fade.x.min(0.35);
         self.fade.to = 1.0;
         self.anim_ms = 0.0;
@@ -306,7 +299,7 @@ impl Viewer {
             return;
         }
         let to = (self.idx as isize + d).rem_euclid(n);
-        self.go_from(to as usize, d.signum() as f32);
+        self.go(to as usize);
     }
 
     fn open_dialog(&mut self) {
